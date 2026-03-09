@@ -2,6 +2,7 @@ import AppKit
 import ApplicationServices
 import Foundation
 
+// 聚合 Spotlight 输入框文本和几何信息，供浮层定位与翻译触发复用。
 struct FocusedTextContext {
     let query: String
     let queryFrame: CGRect?
@@ -9,6 +10,7 @@ struct FocusedTextContext {
 }
 
 enum AccessibilityBridge {
+    // 只记录探测结果的变化，避免轮询日志刷屏。
     nonisolated(unsafe) private static var lastProbeSummary: String?
 
     static func isTrusted(prompt: Bool) -> Bool {
@@ -44,6 +46,7 @@ enum AccessibilityBridge {
         }
 
         let windowTitles = windows.map { copyStringAttribute(kAXTitleAttribute as CFString, from: $0) ?? "<untitled>" }
+        // 不同系统版本下 Spotlight 标题和窗口层级并不稳定，这里先按标题匹配，失败时退化到第一个窗口。
         guard let spotlightWindow = copySpotlightWindow(from: windows) else {
             reportProbe("spotlight windows present but no matching window: \(windowTitles.joined(separator: ", "))")
             return nil
@@ -173,6 +176,7 @@ enum AccessibilityBridge {
             return directField
         }
 
+        // 新版 Spotlight 经常把输入框包在多层容器里，所以需要递归向下找。
         return firstDescendant(in: window, matching: isQueryField)
     }
 
@@ -207,6 +211,7 @@ enum AccessibilityBridge {
         let description = copyStringAttribute(kAXDescriptionAttribute as CFString, from: element)
         let title = copyStringAttribute(kAXTitleAttribute as CFString, from: element)
 
+        // Spotlight 在不同状态下可能只暴露占位符、描述或标题，不能只靠 value 判断。
         return directValue != nil
             || placeholder == "聚焦搜索"
             || description == "聚焦搜索"

@@ -2,6 +2,7 @@
 
 set -euo pipefail
 
+# 使用独立临时目录隔离 SwiftPM 缓存，减少本机环境差异对打包结果的影响。
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 APP_NAME="SpotSentenceTranslate"
 BUILD_DIR="$ROOT_DIR/build"
@@ -36,6 +37,7 @@ cp "$ROOT_DIR/Support/Info.plist" "$APP_BUNDLE/Contents/Info.plist"
 chmod +x "$APP_BUNDLE/Contents/MacOS/$APP_NAME"
 
 echo "==> Applying stable ad-hoc signature"
+# 固定 designated requirement，确保重建后的 app 仍然以同一个 bundle id 身份运行。
 codesign \
   --force \
   --deep \

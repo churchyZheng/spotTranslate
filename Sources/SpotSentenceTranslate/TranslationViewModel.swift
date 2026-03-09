@@ -1,11 +1,13 @@
 import Foundation
 @preconcurrency import Translation
 
+// 一次翻译执行所需的最小上下文；requestID 用于丢弃过期结果。
 struct TranslationJob: Sendable {
     let candidate: TranslationCandidate
     let requestID: UUID
 }
 
+// TranslationSession.Configuration 按语言方向复用，避免每次输入都重建整个翻译会话。
 struct TranslationLanguagePair: Equatable, Sendable {
     let source: Locale.Language
     let target: Locale.Language
@@ -47,6 +49,7 @@ final class TranslationViewModel: ObservableObject {
     private var activeRequestID = UUID()
     private var debounceTask: Task<Void, Never>?
     private var availabilityTask: Task<Void, Never>?
+    // 只保留最新任务，用户连续输入时旧句子没有必要继续排队。
     private var translationQueue: TranslationJobQueue?
 
     func enqueue(candidate: TranslationCandidate) {
@@ -67,6 +70,7 @@ final class TranslationViewModel: ObservableObject {
         targetLabel = candidate.targetLanguage.maximalIdentifier.hasPrefix("en") ? "目标语言：English" : "目标语言：简体中文"
 
         debounceTask = Task { @MainActor [weak self] in
+            // 给 Spotlight 输入一个很短的稳定窗口，避免用户还在敲字时频繁触发翻译。
             try? await Task.sleep(for: .milliseconds(220))
             await self?.activate(candidate: candidate)
         }
@@ -117,6 +121,7 @@ final class TranslationViewModel: ObservableObject {
                 self.activeRequestID == requestID,
                 self.activeCandidate == candidate
             else {
+                // 在等待资源状态期间如果用户已经改了输入，旧结果直接丢弃。
                 return
             }
 
@@ -169,6 +174,7 @@ final class TranslationViewModel: ObservableObject {
 
         if translationQueue?.languagePair == languagePair {
             if configuration == nil {
+                // 同一语言方向下仅补建配置，不替换底层队列，避免中断正在运行的视图任务。
                 configuration = TranslationSession.Configuration(
                     source: languagePair.source,
                     target: languagePair.target
@@ -181,6 +187,7 @@ final class TranslationViewModel: ObservableObject {
         translationQueue?.continuation.finish()
 
         var continuation: AsyncStream<TranslationJob>.Continuation?
+        // bufferingNewest(1) 可以把频繁输入压缩成“只翻最后一句”。
         let stream = AsyncStream<TranslationJob>(bufferingPolicy: .bufferingNewest(1)) { streamContinuation in
             continuation = streamContinuation
         }
@@ -209,6 +216,7 @@ final class TranslationViewModel: ObservableObject {
             return
         }
 
+        // 二次校验 requestID，避免旧任务较晚返回时覆盖掉新结果。
         DebugLog.write("translation.finish '\(job.candidate.normalizedText)' -> '\(response.targetText)'")
         resultText = response.targetText
         errorMessage = nil

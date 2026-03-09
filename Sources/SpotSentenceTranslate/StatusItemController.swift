@@ -32,6 +32,7 @@ final class StatusItemController: NSObject {
     }
 
     func updateAccessibilityState(granted: Bool) {
+        // 菜单栏标题直接反映权限状态，方便快速定位“没翻译”是否是授权问题。
         statusLabelItem.title = granted ? "辅助功能权限：已授予" : "辅助功能权限：未授予"
         statusItem.button?.title = granted ? "译" : "译!"
     }

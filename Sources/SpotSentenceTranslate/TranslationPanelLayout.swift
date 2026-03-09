@@ -50,6 +50,7 @@ enum TranslationPanelLayout {
             + sourceHeight
             + bottomPadding
 
+        // 最低保证卡片观感稳定，最高则限制在屏幕可视区域，长文本通过滚动承载。
         let maxHeight = max(
             minimumHeight,
             min(maximumHeight, visibleHeight - 64)

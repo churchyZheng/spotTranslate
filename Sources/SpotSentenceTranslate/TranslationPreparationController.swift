@@ -24,6 +24,7 @@ final class TranslationPreparationController {
             activeJob?.candidate.sourceLanguage == candidate.sourceLanguage,
             activeJob?.candidate.targetLanguage == candidate.targetLanguage
         {
+            // 同一语言方向的准备窗口只保留一个，避免重复弹窗。
             return
         }
 
@@ -73,6 +74,7 @@ final class TranslationPreparationController {
             activeJob = nil
 
             Task { @MainActor [weak self] in
+                // 成功提示保留一小段时间，给用户一个明确的完成反馈。
                 try? await Task.sleep(for: .seconds(1.2))
                 self?.window?.orderOut(nil)
                 self?.viewModel.reset()
@@ -101,6 +103,7 @@ private final class TranslationPreparationViewModel: ObservableObject {
         titleText = "正在准备翻译语言包"
         detailText = "首次使用 \(job.candidate.normalizedText) 对应的翻译方向时，系统会请求下载语言资源。"
         isLoading = true
+        // 通过系统 TranslationSession 触发语言包准备，避免自行管理下载逻辑。
         configuration = TranslationSession.Configuration(
             source: job.candidate.sourceLanguage,
             target: job.candidate.targetLanguage
@@ -185,6 +188,7 @@ private struct TranslationPreparationView: View {
             }
 
             do {
+                // prepareTranslation 只负责拉起系统资源准备，不直接产出翻译文本。
                 try await session.prepareTranslation()
                 viewModel.finishPreparation()
             } catch is CancellationError {

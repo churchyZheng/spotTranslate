@@ -5,6 +5,7 @@ struct TranslationPanelView: View {
     @ObservedObject var viewModel: TranslationViewModel
 
     var body: some View {
+        // 直接读取当前视图尺寸，避免外部在 resize 时重建整个 HostingView。
         GeometryReader { proxy in
             VStack(alignment: .leading, spacing: TranslationPanelLayout.sectionSpacing) {
                 headerSection
@@ -24,6 +25,7 @@ struct TranslationPanelView: View {
                 return
             }
 
+            // translationTask 绑定在稳定视图上，由 ViewModel 通过队列喂入最新翻译请求。
             for await job in stream {
                 DebugLog.write("translation.run start '\(job.candidate.normalizedText)'")
 

@@ -6,6 +6,7 @@ import Testing
 struct TranslationViewModelTests {
     @Test
     func keepsOnlyLatestQueuedJobForSameLanguagePair() async {
+        // 用户连续输入时只应该消费最后一个请求，避免旧句子排队翻译。
         let viewModel = TranslationViewModel()
         let sourceLanguage = Locale.Language(identifier: "en")
         let targetLanguage = Locale.Language(identifier: "zh-Hans")

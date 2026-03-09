@@ -2,6 +2,7 @@
 
 set -euo pipefail
 
+# 安装到 ~/Applications，避免每次从 build 目录运行都被系统当成新应用实例。
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 SOURCE_APP="$ROOT_DIR/build/SpotSentenceTranslate.app"
 TARGET_DIR="$HOME/Applications"

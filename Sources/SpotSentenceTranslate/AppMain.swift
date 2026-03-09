@@ -17,6 +17,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var appController: AppController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // 作为菜单栏工具运行，不显示 Dock 图标。
         NSApp.setActivationPolicy(.accessory)
         appController = AppController()
         appController?.start()
@@ -25,6 +26,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
 @MainActor
 final class AppController {
+    // 在这里集中装配依赖，避免状态分散在多个入口里。
     private let preparationController = TranslationPreparationController()
     private lazy var viewModel = TranslationViewModel()
     private lazy var panelController = TranslationPanelController(viewModel: viewModel)

@@ -6,6 +6,7 @@ import Testing
 struct TranslationPanelControllerTests {
     @Test
     func resizeKeepsExistingContentView() {
+        // 回归保护：面板尺寸变化不能替换 HostingView，否则会把 translationTask 一起取消。
         let viewModel = TranslationViewModel()
         let controller = TranslationPanelController(viewModel: viewModel)
 

@@ -1,6 +1,7 @@
 import Foundation
 import NaturalLanguage
 
+// 封装一次可翻译的 Spotlight 输入及其语言方向。
 struct TranslationCandidate: Equatable, Sendable {
     let originalText: String
     let normalizedText: String
@@ -22,6 +23,7 @@ enum QueryClassifier {
         let tokenCount = normalizedText.split(whereSeparator: \.isWhitespace).count
         let ideographCount = normalizedText.unicodeScalars.filter(\.properties.isIdeographic).count
         let containsSentencePunctuation = normalizedText.contains(where: isSentencePunctuation)
+        // 这里故意偏保守：英文至少两个词，中文至少 4 个字，或带明显句读符号，避免抢走 Spotlight 的单词查询。
         let shouldTranslate = tokenCount >= 2 || ideographCount >= 4 || (containsSentencePunctuation && normalizedText.count >= 6)
 
         guard shouldTranslate else {
@@ -49,6 +51,7 @@ enum QueryClassifier {
         let recognizer = NLLanguageRecognizer()
         recognizer.processString(text)
 
+        // 当前产品只支持中英互译，识别不出中文时统一按英文处理。
         if recognizer.dominantLanguage?.rawValue.hasPrefix("zh") == true {
             return Locale.Language(identifier: "zh-Hans")
         }

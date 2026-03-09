@@ -21,6 +21,7 @@ final class SpotlightMonitor {
         refreshAccessibility(prompt: true)
         poll()
 
+        // Spotlight 没有公开的输入变更通知，只能低频轮询；250ms 在响应速度和资源占用之间比较平衡。
         timer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 self?.poll()
@@ -78,6 +79,7 @@ final class SpotlightMonitor {
 
     private func registerInvalidPoll() {
         invalidPollCount += 1
+        // Spotlight 切换焦点时会短暂返回空值，累计 3 次无效轮询后再隐藏可以减少闪烁。
         guard invalidPollCount >= 3 else {
             return
         }

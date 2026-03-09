@@ -76,6 +76,7 @@ final class TranslationPanelController {
         DebugLog.write("panel.ensure set animationBehavior")
         panel.animationBehavior = .utilityWindow
         DebugLog.write("panel.ensure before hosting view")
+        // HostingView 只创建一次，避免尺寸变化时重建 SwiftUI 树把 translationTask 一起取消。
         let hostingView = NSHostingView(rootView: TranslationPanelView(viewModel: viewModel))
         panel.contentView = hostingView
         self.hostingView = hostingView
@@ -93,6 +94,7 @@ final class TranslationPanelController {
             || abs(currentSize.height - size.height) > 0.5
 
         if panel.contentView == nil {
+            // 极少数情况下 contentView 会被系统释放，这里只补建视图，不主动替换已有实例。
             let hostingView = NSHostingView(rootView: TranslationPanelView(viewModel: viewModel))
             panel.contentView = hostingView
             self.hostingView = hostingView
@@ -139,6 +141,7 @@ final class TranslationPanelController {
         }
 
         let resolvedWidth = round(width)
+        // 高度根据当前翻译结果实时计算，但要限制在可视区域内，避免长文本把 Spotlight 顶走。
         let resolvedHeight = TranslationPanelLayout.preferredHeight(
             panelWidth: resolvedWidth,
             primaryText: viewModel.errorMessage ?? viewModel.resultText,
@@ -171,7 +174,7 @@ final class TranslationPanelController {
         let panelY: CGFloat
 
         if let windowFrame {
-            // AX frames from Spotlight use a top-left origin; convert to AppKit screen coordinates.
+            // Accessibility API 返回的坐标以左上角为原点，而 AppKit 面板坐标以左下角为原点，需要手动换算。
             let spotlightBottomY = screen.frame.maxY - windowFrame.minY - windowFrame.height
             panelY = spotlightBottomY - panelSize.height + attachedTopOverlap
         } else if let queryFrame {

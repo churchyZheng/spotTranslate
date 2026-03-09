@@ -1,6 +1,7 @@
 import Foundation
 
 enum DebugLog {
+    // 统一写到 /tmp，便于现场排查时直接 tail 查看。
     private static let logURL = URL(fileURLWithPath: "/tmp/SpotSentenceTranslate.log")
 
     static func reset() {
@@ -20,6 +21,7 @@ enum DebugLog {
             return
         }
 
+        // 用追加写入保持日志时序，避免并发覆盖旧内容。
         defer { try? handle.close() }
         _ = try? handle.seekToEnd()
         try? handle.write(contentsOf: data)
