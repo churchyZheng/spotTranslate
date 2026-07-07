@@ -43,6 +43,9 @@ final class AppController {
         viewModel.onNeedsPreparation = { [weak self] candidate in
             self?.preparationController.prepare(candidate: candidate)
         }
+        preparationController.onPrepared = { [weak self] candidate in
+            self?.viewModel.markPreparationSucceeded(for: candidate)
+        }
         statusItemController.onQuit = {
             NSApp.terminate(nil)
         }

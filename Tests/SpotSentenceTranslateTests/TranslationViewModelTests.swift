@@ -110,4 +110,30 @@ struct TranslationViewModelTests {
         #expect(dequeuedJob?.requestID == requestID)
         #expect(dequeuedJob?.candidate.normalizedText == "how are you")
     }
+
+    @Test
+    func preparationSuccessSubmitsCandidateForTranslation() async {
+        let viewModel = TranslationViewModel()
+        let candidate = TranslationCandidate(
+            originalText: "你还非得",
+            normalizedText: "你还非得",
+            sourceLanguage: Locale.Language(identifier: "zh-Hans"),
+            targetLanguage: Locale.Language(identifier: "en")
+        )
+
+        viewModel.markPreparationSucceeded(for: candidate)
+
+        guard let stream = viewModel.translationJobStream() else {
+            Issue.record("translation stream should exist after preparation succeeds")
+            return
+        }
+
+        var iterator = stream.makeAsyncIterator()
+        let dequeuedJob = await iterator.next()
+
+        #expect(viewModel.errorMessage == nil)
+        #expect(viewModel.isLoading)
+        #expect(viewModel.resultText == "正在翻译…")
+        #expect(dequeuedJob?.candidate.normalizedText == "你还非得")
+    }
 }

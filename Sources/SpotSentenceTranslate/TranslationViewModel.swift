@@ -95,6 +95,23 @@ final class TranslationViewModel: ObservableObject {
         DebugLog.write("viewModel.reset clear configuration")
     }
 
+    func markPreparationSucceeded(for candidate: TranslationCandidate) {
+        debounceTask?.cancel()
+        availabilityTask?.cancel()
+        debounceTask = nil
+        availabilityTask = nil
+        pendingCandidate = nil
+        activeCandidate = candidate
+        activeRequestID = UUID()
+        sourceText = candidate.normalizedText
+        resultText = "正在翻译…"
+        errorMessage = nil
+        isLoading = true
+        targetLabel = candidate.targetLanguage.maximalIdentifier.hasPrefix("en") ? "目标语言：English" : "目标语言：简体中文"
+        DebugLog.write("translation.prepare success retry '\(candidate.normalizedText)'")
+        startTranslation(candidate: candidate)
+    }
+
     private func activate(candidate: TranslationCandidate) async {
         guard pendingCandidate == candidate else {
             return

@@ -9,6 +9,8 @@ private struct TranslationPreparationJob: Sendable {
 
 @MainActor
 final class TranslationPreparationController {
+    var onPrepared: ((TranslationCandidate) -> Void)?
+
     private let viewModel = TranslationPreparationViewModel()
     private var window: NSWindow?
     private var activeJob: TranslationPreparationJob?
@@ -72,6 +74,7 @@ final class TranslationPreparationController {
         case .success:
             DebugLog.write("prepare.finish '\(job.candidate.normalizedText)'")
             activeJob = nil
+            onPrepared?(job.candidate)
 
             Task { @MainActor [weak self] in
                 // 成功提示保留一小段时间，给用户一个明确的完成反馈。
