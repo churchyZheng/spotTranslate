@@ -95,6 +95,22 @@ final class TranslationViewModel: ObservableObject {
         DebugLog.write("viewModel.reset clear configuration")
     }
 
+    func clearForHiddenPanel() {
+        debounceTask?.cancel()
+        availabilityTask?.cancel()
+        debounceTask = nil
+        availabilityTask = nil
+        activeCandidate = nil
+        pendingCandidate = nil
+        activeRequestID = UUID()
+        sourceText = ""
+        resultText = "正在翻译…"
+        errorMessage = nil
+        isLoading = false
+        targetLabel = "目标语言：简体中文"
+        DebugLog.write("viewModel.clear hidden panel")
+    }
+
     func markPreparationSucceeded(for candidate: TranslationCandidate) {
         debounceTask?.cancel()
         availabilityTask?.cancel()

@@ -10,6 +10,7 @@ final class SpotlightMonitor {
     private var lastAccessibilityState = false
     private var lastPollSummary: String?
     private var invalidPollCount = 0
+    private var isPanelHidden = true
 
     init(panelController: TranslationPanelController, viewModel: TranslationViewModel) {
         self.panelController = panelController
@@ -56,6 +57,7 @@ final class SpotlightMonitor {
         }
 
         invalidPollCount = 0
+        isPanelHidden = false
         reportPoll("poll: show for '\(candidate.normalizedText)'")
         viewModel.enqueue(candidate: candidate)
         panelController.show(context: context)
@@ -73,7 +75,12 @@ final class SpotlightMonitor {
     }
 
     private func hidePanel() {
-        viewModel.reset()
+        guard isPanelHidden == false else {
+            return
+        }
+
+        isPanelHidden = true
+        viewModel.clearForHiddenPanel()
         panelController.hide()
     }
 

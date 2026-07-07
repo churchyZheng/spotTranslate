@@ -112,6 +112,37 @@ struct TranslationViewModelTests {
     }
 
     @Test
+    func hideClearsDisplayWithoutEndingTranslationQueue() async {
+        let viewModel = TranslationViewModel()
+        let candidate = TranslationCandidate(
+            originalText: "你好吗",
+            normalizedText: "你好吗",
+            sourceLanguage: Locale.Language(identifier: "zh-Hans"),
+            targetLanguage: Locale.Language(identifier: "en")
+        )
+
+        viewModel.ensureTranslationQueue(for: candidate)
+        guard let stream = viewModel.translationJobStream() else {
+            Issue.record("translation stream should exist after queue setup")
+            return
+        }
+
+        viewModel.clearForHiddenPanel()
+        let requestID = UUID()
+        viewModel.submit(job: TranslationJob(candidate: candidate, requestID: requestID))
+
+        var iterator = stream.makeAsyncIterator()
+        let dequeuedJob = await iterator.next()
+
+        #expect(viewModel.configuration != nil)
+        #expect(viewModel.translationJobStream() != nil)
+        #expect(viewModel.sourceText == "")
+        #expect(viewModel.isLoading == false)
+        #expect(dequeuedJob?.requestID == requestID)
+        #expect(dequeuedJob?.candidate.normalizedText == "你好吗")
+    }
+
+    @Test
     func preparationSuccessSubmitsCandidateForTranslation() async {
         let viewModel = TranslationViewModel()
         let candidate = TranslationCandidate(

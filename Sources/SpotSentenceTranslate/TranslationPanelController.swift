@@ -12,7 +12,7 @@ final class TranslationPanelController {
         width: TranslationPanelLayout.defaultWidth,
         height: TranslationPanelLayout.minimumHeight
     )
-    private let attachedTopOverlap: CGFloat = 34
+    private let attachedTopOverlap: CGFloat = 25
     private let minimumBottomMargin: CGFloat = 36
     private let sideMargin: CGFloat = 24
     private let viewModel: TranslationViewModel
@@ -27,9 +27,21 @@ final class TranslationPanelController {
         let geometry = preferredGeometry(for: context)
         let panel = ensurePanel(size: geometry.size)
         updatePanelIfNeeded(panel, size: geometry.size)
-        DebugLog.write("panel.show at \(Int(geometry.origin.x)),\(Int(geometry.origin.y)) size \(Int(geometry.size.width))x\(Int(geometry.size.height))")
-        panel.setFrame(NSRect(origin: geometry.origin, size: geometry.size), display: false)
-        panel.orderFrontRegardless()
+        let frame = NSRect(origin: geometry.origin, size: geometry.size)
+        let needsMove =
+            abs(panel.frame.origin.x - frame.origin.x) > 0.5
+            || abs(panel.frame.origin.y - frame.origin.y) > 0.5
+            || abs(panel.frame.size.width - frame.size.width) > 0.5
+            || abs(panel.frame.size.height - frame.size.height) > 0.5
+
+        if needsMove {
+            DebugLog.write("panel.show at \(Int(geometry.origin.x)),\(Int(geometry.origin.y)) size \(Int(geometry.size.width))x\(Int(geometry.size.height))")
+            panel.setFrame(frame, display: false)
+        }
+
+        if panel.isVisible == false {
+            panel.orderFrontRegardless()
+        }
     }
 
     func hide() {
@@ -38,10 +50,6 @@ final class TranslationPanelController {
         }
         DebugLog.write("panel.hide")
         panel.orderOut(nil)
-        panel.contentView = nil
-        hostingView = nil
-        self.panel = nil
-        DebugLog.write("panel.destroyed")
     }
 
     private func ensurePanel(size: NSSize) -> NSPanel {
@@ -111,6 +119,11 @@ final class TranslationPanelController {
 #if DEBUG
     var debugContentViewIdentity: ObjectIdentifier? {
         panel?.contentView.map(ObjectIdentifier.init)
+    }
+
+    func debugPreferredFrame(for context: FocusedTextContext) -> CGRect {
+        let geometry = preferredGeometry(for: context)
+        return CGRect(origin: geometry.origin, size: geometry.size)
     }
 #endif
 
