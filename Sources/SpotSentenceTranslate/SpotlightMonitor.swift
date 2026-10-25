@@ -23,7 +23,7 @@ final class SpotlightMonitor {
         poll()
 
         // Spotlight 没有公开的输入变更通知，只能低频轮询；250ms 在响应速度和资源占用之间比较平衡。
-        timer = Timer.scheduledTimer(withTimeInterval: 0.01, repeats: true) { [weak self] _ in
+        timer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 self?.poll()
             }
